@@ -4,9 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --open",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "dev": "vite --open --mode development",
+    "dev:ppe": "vite --open --mode ppe",
+    "dev:prod": "vite --open --mode production",
+    "build": "vue-tsc -b && vite build --mode production",
+    "build:ppe": "vue-tsc -b && vite build --mode ppe",
+    "build:prod": "vue-tsc -b && vite build --mode production",
+    "preview": "vite preview",
+    "preview:ppe": "vite preview --mode ppe",
+    "preview:prod": "vite preview --mode production"
   },
   "dependencies": {
     "element-plus": "^2.14.3",
