@@ -1,9 +1,14 @@
 <template>
-  <div>
-    <el-button type="primary">Primary Button</el-button>
-  </div>
+  <router-view />
 </template>
 
-<script>
-
+<script setup lang="ts">
 </script>
+
+<style>
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+</style>
