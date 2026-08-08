@@ -1,0 +1,48 @@
+import type { LoginRequest, LoginResponse, ServiceException } from '../types'
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+
+export class FrontierServiceImpl {
+  async login(req: LoginRequest): Promise<LoginResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req),
+      })
+
+      if (!response.ok) {
+        const error: ServiceException = {
+          code: String(response.status),
+          description: response.statusText || '请求失败',
+        }
+        throw error
+      }
+
+      const data = await response.json() as LoginResponse
+      return data
+    } catch (err) {
+      if (this.isServiceException(err)) {
+        throw err
+      }
+      const error: ServiceException = {
+        code: 'NETWORK_ERROR',
+        description: err instanceof Error ? err.message : '网络异常',
+      }
+      throw error
+    }
+  }
+
+  private isServiceException(err: unknown): err is ServiceException {
+    return (
+      typeof err === 'object' &&
+      err !== null &&
+      'code' in err &&
+      'description' in err
+    )
+  }
+}
+
+export const frontierService = new FrontierServiceImpl()

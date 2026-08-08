@@ -13,6 +13,7 @@
               size="large"
               :prefix-icon="User"
               clearable
+              :disabled="loading"
             />
           </el-form-item>
 
@@ -24,6 +25,7 @@
               size="large"
               :prefix-icon="Lock"
               show-password
+              :disabled="loading"
             />
           </el-form-item>
 
@@ -32,6 +34,7 @@
               type="primary"
               size="large"
               class="login-button"
+              :loading="loading"
               @click="handleLogin"
             >
               登录
@@ -44,18 +47,21 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Lock } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { frontierService } from '@/api'
+import type { LoginRequest } from '@/types'
 
 const router = useRouter()
-const form = reactive({
+const loading = ref(false)
+const form = reactive<LoginRequest>({
   username: '',
-  password: ''
+  password: '',
 })
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!form.username) {
     ElMessage.warning('请输入用户名')
     return
@@ -64,8 +70,35 @@ const handleLogin = () => {
     ElMessage.warning('请输入密码')
     return
   }
-  ElMessage.success('登录成功')
-  router.push('/home')
+
+  loading.value = true
+  try {
+    const res = await frontierService.login({
+      username: form.username,
+      password: form.password,
+    })
+
+    if (res.code === '200' || res.code === '0') {
+      if (res.token) {
+        localStorage.setItem('token', res.token)
+      }
+      if (res.refreshToken) {
+        localStorage.setItem('refreshToken', res.refreshToken)
+      }
+      if (res.userInfo) {
+        localStorage.setItem('userInfo', JSON.stringify(res.userInfo))
+      }
+      ElMessage.success(res.message || '登录成功')
+      router.push('/home')
+    } else {
+      ElMessage.error(res.message || '登录失败')
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : '登录失败，请重试'
+    ElMessage.error(message)
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
