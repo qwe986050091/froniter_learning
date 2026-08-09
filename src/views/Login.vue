@@ -50,7 +50,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Lock } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { login as authLogin, logout as authLogout } from '@/services/authService'
 import type { LoginRequest } from '@/types'
 
@@ -79,8 +79,18 @@ const handleLogin = async () => {
     })
 
     if (res.code === '200' || res.code === '0') {
-      ElMessage.success(res.message || '登录成功')
-      router.push('/home')
+      const now = new Date()
+      const timeStr = now.toLocaleString('zh-CN')
+      ElMessageBox.alert(
+        `当前时间：${timeStr}`,
+        'hi！',
+        {
+          confirmButtonText: '进入系统',
+          callback: () => {
+            router.push('/home')
+          }
+        }
+      )
     } else {
       await authLogout()
       ElMessage.error(res.message || '登录失败')
