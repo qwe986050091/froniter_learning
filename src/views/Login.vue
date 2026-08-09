@@ -51,7 +51,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Lock } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { frontierService } from '@/api'
+import { login as authLogin, logout as authLogout } from '@/services/authService'
 import type { LoginRequest } from '@/types'
 
 const router = useRouter()
@@ -73,24 +73,16 @@ const handleLogin = async () => {
 
   loading.value = true
   try {
-    const res = await frontierService.login({
+    const res = await authLogin({
       username: form.username,
       password: form.password,
     })
 
     if (res.code === '200' || res.code === '0') {
-      if (res.token) {
-        localStorage.setItem('token', res.token)
-      }
-      if (res.refreshToken) {
-        localStorage.setItem('refreshToken', res.refreshToken)
-      }
-      if (res.userInfo) {
-        localStorage.setItem('userInfo', JSON.stringify(res.userInfo))
-      }
       ElMessage.success(res.message || '登录成功')
       router.push('/home')
     } else {
+      await authLogout()
       ElMessage.error(res.message || '登录失败')
     }
   } catch (err: unknown) {

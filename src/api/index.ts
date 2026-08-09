@@ -1,8 +1,14 @@
+import { useAuthStore } from '@/stores/auth'
 import type { LoginRequest, LoginResponse, ServiceException } from '../types'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export class FrontierServiceImpl {
+  private getAuthHeaders(): Record<string, string> {
+    const authStore = useAuthStore()
+    return authStore.getAuthHeader()
+  }
+
   async login(req: LoginRequest): Promise<LoginResponse> {
     try {
       const response = await fetch(`${BASE_URL}/auth/login`, {
@@ -14,9 +20,10 @@ export class FrontierServiceImpl {
       })
 
       if (!response.ok) {
+        const data = await response.json().catch(() => null)
         const error: ServiceException = {
-          code: String(response.status),
-          description: response.statusText || '请求失败',
+          code: data?.code || String(response.status),
+          description: data?.message || response.statusText || '请求失败',
         }
         throw error
       }
@@ -32,6 +39,20 @@ export class FrontierServiceImpl {
         description: err instanceof Error ? err.message : '网络异常',
       }
       throw error
+    }
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await fetch(`${BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          ...this.getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+      })
+    } catch {
+      // ignore logout errors
     }
   }
 
