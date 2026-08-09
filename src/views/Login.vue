@@ -5,8 +5,14 @@
         <h1 class="login-title">Hello</h1>
         <p class="login-subtitle">欢迎来到硅谷甄选</p>
 
-        <el-form :model="form" class="login-form" @keyup.enter="handleLogin">
-          <el-form-item>
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="rules"
+          class="login-form"
+          @keyup.enter="handleLogin"
+        >
+          <el-form-item prop="username">
             <el-input
               v-model="form.username"
               placeholder="用户名"
@@ -17,7 +23,7 @@
             />
           </el-form-item>
 
-          <el-form-item>
+          <el-form-item prop="password">
             <el-input
               v-model="form.password"
               type="password"
@@ -49,27 +55,36 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import type { FormInstance, FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { login as authLogin, logout as authLogout } from '@/services/authService'
 import type { LoginRequest } from '@/types'
 
 const router = useRouter()
+const formRef = ref<FormInstance>()
 const loading = ref(false)
 const form = reactive<LoginRequest>({
   username: '',
   password: '',
 })
 
+const rules = reactive<FormRules>({
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度为 3-20 个字符', trigger: 'blur' },
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 30, message: '密码长度为 6-30 个字符', trigger: 'blur' },
+  ],
+})
+
 const handleLogin = async () => {
-  if (!form.username) {
-    ElMessage.warning('请输入用户名')
-    return
-  }
-  if (!form.password) {
-    ElMessage.warning('请输入密码')
-    return
-  }
+  if (!formRef.value) return
+
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
 
   loading.value = true
   try {
@@ -152,6 +167,11 @@ const handleLogin = async () => {
 
 .login-form :deep(.el-form-item) {
   margin-bottom: 20px;
+}
+
+.login-form :deep(.el-form-item__error) {
+  position: static;
+  padding-top: 4px;
 }
 
 .login-form :deep(.el-input__wrapper) {
