@@ -16,7 +16,7 @@
     />
   </el-sub-menu>
 
-  <el-menu-item v-else :index="item.id">
+  <el-menu-item v-else :index="item.path || item.id">
     <el-icon v-if="iconComponent">
       <component :is="iconComponent" />
     </el-icon>

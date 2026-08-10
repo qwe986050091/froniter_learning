@@ -2,12 +2,30 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../views/Login.vue'
 import Home from '../views/Home.vue'
 import NotFound from '../views/NotFound.vue'
+import HomePage from '../views/pages/HomePage.vue'
+import Dashboard from '../views/pages/Dashboard.vue'
+import Statistics from '../views/pages/Statistics.vue'
+import UserManage from '../views/pages/UserManage.vue'
+import RoleManage from '../views/pages/RoleManage.vue'
+import SystemConfig from '../views/pages/SystemConfig.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
   { path: '/', redirect: '/home' },
   { path: '/login', component: Login, meta: { requiresAuth: false } },
-  { path: '/home', component: Home, meta: { requiresAuth: true } },
+  {
+    path: '/home',
+    component: Home,
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', component: HomePage },
+      { path: 'dashboard', component: Dashboard },
+      { path: 'statistics', component: Statistics },
+      { path: 'user-manage', component: UserManage },
+      { path: 'role-manage', component: RoleManage },
+      { path: 'system-config', component: SystemConfig },
+    ],
+  },
   { path: '/:pathMatch(.*)*', component: NotFound }
 ]
 

@@ -12,10 +12,10 @@
       <!-- 左侧导航栏（后端下发） -->
       <aside class="home-sidebar">
         <el-menu
-          default-active="home"
+          router
+          :default-active="activeMenu"
           class="sidebar-menu"
           :default-openeds="defaultOpeneds"
-          @select="handleMenuSelect"
         >
           <SidebarMenuItem
             v-for="item in menuItems"
@@ -25,44 +25,17 @@
         </el-menu>
       </aside>
 
-      <!-- 右侧主内容区 -->
+      <!-- 右侧主内容区：渲染当前路由对应的子页面组件 -->
       <main class="home-main">
-        <section class="content-card">
-          <h3>{{ currentTitle }}</h3>
-          <p class="content-desc">{{ currentDesc }}</p>
-        </section>
-
-        <section class="dashboard">
-          <div class="card">
-            <h3>路由跳转测试</h3>
-            <button @click="go404">跳转到不存在的页面（测试404）</button>
-          </div>
-
-          <div class="card">
-            <h3>router-link 写法（声明式导航）</h3>
-            <p>
-              <router-link to="/home">回首页</router-link>
-              &nbsp;|&nbsp;
-              <router-link to="/abc/xyz">访问不存在的路径</router-link>
-            </p>
-          </div>
-
-          <div class="card">
-            <h3>用户信息</h3>
-            <p><strong>昵称：</strong>{{ authStore.userInfo?.nickname }}</p>
-            <p><strong>头像：</strong>{{ authStore.userInfo?.avatar }}</p>
-            <p><strong>角色：</strong>{{ authStore.userInfo?.roles?.join(', ') }}</p>
-            <p><strong>Token：</strong>{{ authStore.token?.substring(0, 20) }}...</p>
-          </div>
-        </section>
+        <router-view />
       </main>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import SidebarMenuItem from '@/components/SidebarMenuItem.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -71,37 +44,22 @@ import { frontierService } from '@/api'
 import type { MenuItem } from '@/types'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const menuItems = ref<MenuItem[]>([])
 const defaultOpeneds = ref<string[]>([])
 
-const currentTitle = ref('首页')
-const currentDesc = ref('这里是系统首页总览。')
+// 根据当前路由路径高亮侧边栏菜单项
+const activeMenu = ref(route.path)
 
-// 在菜单树中按 id 递归查找节点
-const findMenuItem = (list: MenuItem[], id: string): MenuItem | undefined => {
-  for (const m of list) {
-    if (m.id === id) return m
-    if (m.children) {
-      const found = findMenuItem(m.children, id)
-      if (found) return found
-    }
+// 路由变化时同步高亮
+watch(
+  () => route.path,
+  (path) => {
+    activeMenu.value = path
   }
-  return undefined
-}
-
-const handleMenuSelect = (index: string) => {
-  const item = findMenuItem(menuItems.value, index)
-  if (item) {
-    currentTitle.value = item.name
-    currentDesc.value = item.desc || `这里是${item.name}页面。`
-  }
-}
-
-const go404 = () => {
-  router.push('/some-not-exist-page')
-}
+)
 
 const handleLogout = async () => {
   try {
@@ -153,7 +111,7 @@ onMounted(async () => {
   align-items: center;
   padding: 16px 40px;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e4e7ed;
 }
 
 .user-info h2 {
@@ -194,59 +152,5 @@ onMounted(async () => {
   flex: 1;
   padding: 24px;
   overflow: auto;
-}
-
-.content-card {
-  background: #fff;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  margin-bottom: 24px;
-}
-
-.content-card h3 {
-  margin: 0 0 8px;
-  color: #303133;
-}
-
-.content-desc {
-  margin: 0;
-  color: #909399;
-}
-
-.dashboard {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-}
-
-.card {
-  background: #fff;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.card h3 {
-  margin: 0 0 16px;
-  color: #303133;
-}
-
-.card p {
-  color: #606266;
-  margin: 8px 0;
-}
-
-.card button {
-  padding: 8px 16px;
-  background: #409eff;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.card button:hover {
-  background: #66b1ff;
 }
 </style>
