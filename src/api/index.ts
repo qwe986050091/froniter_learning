@@ -1,5 +1,5 @@
 import { useAuthStore } from '@/stores/auth'
-import type { LoginRequest, LoginResponse, ServiceException } from '../types'
+import type { LoginRequest, LoginResponse, MenuItem, ServiceException } from '../types'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
@@ -53,6 +53,38 @@ export class FrontierServiceImpl {
       })
     } catch {
       // ignore logout errors
+    }
+  }
+
+  async getMenu(): Promise<MenuItem[]> {
+    try {
+      const response = await fetch(`${BASE_URL}/menu`, {
+        method: 'GET',
+        headers: {
+          ...this.getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        const error: ServiceException = {
+          code: data?.code || String(response.status),
+          description: data?.message || response.statusText || '获取菜单失败',
+        }
+        throw error
+      }
+
+      return await response.json() as MenuItem[]
+    } catch (err) {
+      if (this.isServiceException(err)) {
+        throw err
+      }
+      const error: ServiceException = {
+        code: 'NETWORK_ERROR',
+        description: err instanceof Error ? err.message : '网络异常',
+      }
+      throw error
     }
   }
 

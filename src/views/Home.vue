@@ -9,58 +9,19 @@
     </header>
 
     <div class="home-body">
-      <!-- 左侧导航栏 -->
+      <!-- 左侧导航栏（后端下发） -->
       <aside class="home-sidebar">
         <el-menu
           default-active="home"
           class="sidebar-menu"
-          :default-openeds="['group1', 'group2']"
+          :default-openeds="defaultOpeneds"
           @select="handleMenuSelect"
         >
-          <el-menu-item index="home">
-            <el-icon><HomeFilled /></el-icon>
-            <span>首页</span>
-          </el-menu-item>
-
-          <el-sub-menu index="group1">
-            <template #title>
-              <el-icon><DataBoard /></el-icon>
-              <span>数据管理</span>
-            </template>
-            <el-menu-item index="dashboard">
-              <el-icon><Odometer /></el-icon>
-              <span>数据看板</span>
-            </el-menu-item>
-            <el-menu-item index="statistics">
-              <el-icon><TrendCharts /></el-icon>
-              <span>统计分析</span>
-            </el-menu-item>
-          </el-sub-menu>
-
-          <el-sub-menu index="group2">
-            <template #title>
-              <el-icon><Setting /></el-icon>
-              <span>系统设置</span>
-            </template>
-            <el-menu-item index="user-manage">
-              <el-icon><User /></el-icon>
-              <span>用户管理</span>
-            </el-menu-item>
-            <el-menu-item index="role-manage">
-              <el-icon><Avatar /></el-icon>
-              <span>角色管理</span>
-            </el-menu-item>
-            <el-sub-menu index="group2-1">
-              <template #title>
-                <el-icon><Tools /></el-icon>
-                <span>更多设置</span>
-              </template>
-              <el-menu-item index="system-config">
-                <el-icon><Monitor /></el-icon>
-                <span>系统配置</span>
-              </el-menu-item>
-            </el-sub-menu>
-          </el-sub-menu>
+          <SidebarMenuItem
+            v-for="item in menuItems"
+            :key="item.id"
+            :item="item"
+          />
         </el-menu>
       </aside>
 
@@ -100,43 +61,41 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import {
-  HomeFilled,
-  DataBoard,
-  Odometer,
-  TrendCharts,
-  Setting,
-  User,
-  Avatar,
-  Tools,
-  Monitor,
-} from '@element-plus/icons-vue'
+import SidebarMenuItem from '@/components/SidebarMenuItem.vue'
 import { useAuthStore } from '@/stores/auth'
 import { logout as authLogout } from '@/services/authService'
+import { frontierService } from '@/api'
+import type { MenuItem } from '@/types'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const menuContent: Record<string, { title: string; desc: string }> = {
-  home: { title: '首页', desc: '这里是系统首页总览。' },
-  dashboard: { title: '数据看板', desc: '这里是数据看板页面。' },
-  statistics: { title: '统计分析', desc: '这里是统计分析页面。' },
-  'user-manage': { title: '用户管理', desc: '这里是用户管理页面。' },
-  'role-manage': { title: '角色管理', desc: '这里是角色管理页面。' },
-  'system-config': { title: '系统配置', desc: '这里是系统配置页面。' },
-}
+const menuItems = ref<MenuItem[]>([])
+const defaultOpeneds = ref<string[]>([])
 
 const currentTitle = ref('首页')
 const currentDesc = ref('这里是系统首页总览。')
 
+// 在菜单树中按 id 递归查找节点
+const findMenuItem = (list: MenuItem[], id: string): MenuItem | undefined => {
+  for (const m of list) {
+    if (m.id === id) return m
+    if (m.children) {
+      const found = findMenuItem(m.children, id)
+      if (found) return found
+    }
+  }
+  return undefined
+}
+
 const handleMenuSelect = (index: string) => {
-  const content = menuContent[index]
-  if (content) {
-    currentTitle.value = content.title
-    currentDesc.value = content.desc
+  const item = findMenuItem(menuItems.value, index)
+  if (item) {
+    currentTitle.value = item.name
+    currentDesc.value = item.desc || `这里是${item.name}页面。`
   }
 }
 
@@ -159,6 +118,27 @@ const handleLogout = async () => {
     // user cancelled
   }
 }
+
+onMounted(async () => {
+  try {
+    menuItems.value = await frontierService.getMenu()
+    // 收集所有带子菜单的节点 id 用于默认展开
+    const opened: string[] = []
+    const collect = (list: MenuItem[]) => {
+      list.forEach((m) => {
+        if (m.children && m.children.length) {
+          opened.push(m.id)
+          collect(m.children)
+        }
+      })
+    }
+    collect(menuItems.value)
+    defaultOpeneds.value = opened
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '获取菜单失败'
+    ElMessage.error(message)
+  }
+})
 </script>
 
 <style scoped>

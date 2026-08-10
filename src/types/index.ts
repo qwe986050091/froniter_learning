@@ -27,6 +27,15 @@ export interface ServiceException {
   description: string
 }
 
+export interface MenuItem {
+  id: string
+  name: string
+  icon?: string
+  path?: string
+  desc?: string
+  children?: MenuItem[]
+}
+
 export interface FrontierService {
   login(req: LoginRequest): Promise<LoginResponse>
 }
