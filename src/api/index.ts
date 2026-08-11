@@ -9,92 +9,73 @@ export class FrontierServiceImpl {
     return authStore.getAuthHeader()
   }
 
-  async login(req: LoginRequest): Promise<LoginResponse> {
-    try {
-      const response = await fetch(`${BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(req),
-      })
+  // 统一处理 401（登录失效）：清除本地登录态并跳转登录页
+  private handleUnauthorized() {
+    const authStore = useAuthStore()
+    authStore.clear()
+    // 使用整页跳转，避免与 router 产生循环依赖
+    if (window.location.pathname !== '/login') {
+      window.location.assign('/login')
+    }
+  }
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => null)
-        const error: ServiceException = {
-          code: data?.code || String(response.status),
-          description: data?.message || response.statusText || '请求失败',
-        }
-        throw error
-      }
+  // 统一请求封装：auth=true 时自动附带 token；遇到 401 自动跳转登录页
+  private async request<T>(
+    path: string,
+    options: RequestInit = {},
+    auth = false
+  ): Promise<T> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (auth) {
+      Object.assign(headers, this.getAuthHeaders())
+    }
 
-      const data = await response.json() as LoginResponse
-      return data
-    } catch (err) {
-      if (this.isServiceException(err)) {
-        throw err
-      }
+    const response = await fetch(`${BASE_URL}${path}`, { ...options, headers })
+
+    // 登录失效（后端在 token 无效/缺失时返回 401）
+    if (response.status === 401) {
+      this.handleUnauthorized()
       const error: ServiceException = {
-        code: 'NETWORK_ERROR',
-        description: err instanceof Error ? err.message : '网络异常',
+        code: 'UNAUTHORIZED',
+        description: '登录已失效，请重新登录',
       }
       throw error
     }
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => null)
+      const error: ServiceException = {
+        code: data?.code || String(response.status),
+        description: data?.message || response.statusText || '请求失败',
+      }
+      throw error
+    }
+
+    if (response.status === 204) {
+      return undefined as T
+    }
+    return response.json() as Promise<T>
+  }
+
+  async login(req: LoginRequest): Promise<LoginResponse> {
+    return this.request<LoginResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    })
   }
 
   async logout(): Promise<void> {
     try {
-      await fetch(`${BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          ...this.getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
-      })
+      await this.request<void>('/auth/logout', { method: 'POST' }, true)
     } catch {
       // ignore logout errors
     }
   }
 
   async getMenu(): Promise<MenuItem[]> {
-    try {
-      const response = await fetch(`${BASE_URL}/menu`, {
-        method: 'GET',
-        headers: {
-          ...this.getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => null)
-        const error: ServiceException = {
-          code: data?.code || String(response.status),
-          description: data?.message || response.statusText || '获取菜单失败',
-        }
-        throw error
-      }
-
-      return await response.json() as MenuItem[]
-    } catch (err) {
-      if (this.isServiceException(err)) {
-        throw err
-      }
-      const error: ServiceException = {
-        code: 'NETWORK_ERROR',
-        description: err instanceof Error ? err.message : '网络异常',
-      }
-      throw error
-    }
-  }
-
-  private isServiceException(err: unknown): err is ServiceException {
-    return (
-      typeof err === 'object' &&
-      err !== null &&
-      'code' in err &&
-      'description' in err
-    )
+    return this.request<MenuItem[]>('/menu', { method: 'GET' }, true)
   }
 }
 
