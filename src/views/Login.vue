@@ -119,7 +119,7 @@ const handleLogin = async () => {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .login-container {
   width: 100%;
   height: 100vh;

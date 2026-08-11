@@ -8,7 +8,7 @@
 <script setup lang="ts">
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .page {
   background: #fff;
   padding: 24px;
