@@ -1,21 +1,31 @@
 <template>
   <div class="home-container">
     <header class="home-header">
-      <div class="user-info">
-        <h2>欢迎, {{ authStore.userInfo?.nickname || authStore.userInfo?.username || 'User' }}</h2>
-        <p class="user-id">ID: {{ authStore.userInfo?.userId }}</p>
+      <div class="header-left">
+        <el-button text class="collapse-btn" @click="isCollapse = !isCollapse">
+          <el-icon :size="22">
+            <Expand v-if="isCollapse" />
+            <Fold v-else />
+          </el-icon>
+        </el-button>
+        <div class="user-info">
+          <h2>欢迎, {{ authStore.userInfo?.nickname || authStore.userInfo?.username || 'User' }}</h2>
+          <p class="user-id">ID: {{ authStore.userInfo?.userId }}</p>
+        </div>
       </div>
       <el-button type="danger" @click="handleLogout">退出登录</el-button>
     </header>
 
     <div class="home-body">
       <!-- 左侧导航栏（后端下发） -->
-      <aside class="home-sidebar">
+      <aside class="home-sidebar" :class="{ collapsed: isCollapse }">
         <el-menu
           router
           :default-active="activeMenu"
           class="sidebar-menu"
           :default-openeds="defaultOpeneds"
+          :collapse="isCollapse"
+          :collapse-transition="false"
         >
           <SidebarMenuItem
             v-for="item in menuItems"
@@ -37,6 +47,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
+import { Expand, Fold } from '@element-plus/icons-vue'
 import SidebarMenuItem from '@/components/SidebarMenuItem.vue'
 import { useAuthStore } from '@/stores/auth'
 import { logout as authLogout } from '@/services/authService'
@@ -46,6 +57,9 @@ import type { MenuItem } from '@/types'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+
+// 侧边栏是否收起
+const isCollapse = ref(false)
 
 const menuItems = ref<MenuItem[]>([])
 const defaultOpeneds = ref<string[]>([])
@@ -114,6 +128,17 @@ onMounted(async () => {
   border-bottom: 1px solid #e4e7ed;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.collapse-btn {
+  padding: 6px;
+  color: #606266;
+}
+
 .user-info h2 {
   margin: 0;
   color: #303133;
@@ -136,10 +161,21 @@ onMounted(async () => {
   flex-shrink: 0;
   background: #fff;
   border-right: 1px solid #e4e7ed;
+  overflow: hidden;
+  transition: width 0.25s ease;
+}
+
+.home-sidebar.collapsed {
+  width: 64px;
 }
 
 .sidebar-menu {
   border-right: none;
+}
+
+/* 折叠态下让菜单宽度跟随侧边栏一起过渡，避免文字跳变/空白 */
+.sidebar-menu.el-menu--collapse {
+  width: 100% !important;
 }
 
 .sidebar-menu :deep(.el-menu-item.is-active) {
