@@ -1,16 +1,25 @@
 import { useAuthStore } from '@/stores/auth'
 import type {
-  Brand,
-  BrandCreateRequest,
-  BrandPageResult,
-  BrandQuery,
-  BrandSortRequest,
-  BrandStatusRequest,
-  BrandUpdateRequest,
-  LoginRequest,
-  LoginResponse,
-  MenuItem,
-  ServiceException,
+    Brand,
+    BrandCreateRequest,
+    BrandPageResult,
+    BrandQuery,
+    BrandSortRequest,
+    BrandStatusRequest,
+    BrandUpdateRequest,
+    Category,
+    CategoryCreateRequest,
+    CategoryQuery,
+    CategoryUpdateRequest,
+    LoginRequest,
+    LoginResponse,
+    MenuItem,
+    PlatformAttr,
+    PlatformAttrCreateRequest,
+    PlatformAttrPageResult,
+    PlatformAttrQuery, PlatformAttrUpdateRequest,
+    PlatformAttrWithValues,
+    ServiceException,
 } from '../types'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
@@ -150,6 +159,75 @@ export class FrontierServiceImpl {
       method: 'PATCH',
       body: JSON.stringify({ sort: req.sort }),
     }, true)
+  }
+
+  // ========== 平台分类 ==========
+
+  async listCategory(query?: CategoryQuery): Promise<Category[]> {
+    const params = new URLSearchParams()
+    if (query?.level != null) params.set('level', String(query.level))
+    if (query?.parentId != null) params.set('parentId', String(query.parentId))
+    const qs = params.toString()
+    return this.request<Category[]>(`/product/categories${qs ? `?${qs}` : ''}`, { method: 'GET' }, true)
+  }
+
+  async createCategory(req: CategoryCreateRequest): Promise<Category> {
+    return this.request<Category>('/product/categories', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }, true)
+  }
+
+  async updateCategory(req: CategoryUpdateRequest): Promise<Category> {
+    return this.request<Category>(`/product/categories/${req.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(req),
+    }, true)
+  }
+
+  async updateCategoryStatus(req: { id: number; status: number }): Promise<{ success: boolean }> {
+    return this.request<{ success: boolean }>(`/product/categories/${req.id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: req.status }),
+    }, true)
+  }
+
+  async deleteCategoryById(id: number): Promise<{ success: boolean }> {
+    return this.request<{ success: boolean }>(`/product/categories/${id}`, { method: 'DELETE' }, true)
+  }
+
+  // ========== 平台属性 ==========
+
+  async listPlatformAttr(query?: PlatformAttrQuery): Promise<PlatformAttrPageResult> {
+    const params = new URLSearchParams()
+    if (query?.categoryId != null) params.set('categoryId', String(query.categoryId))
+    if (query?.name) params.set('name', query.name)
+    if (query?.status != null) params.set('status', String(query.status))
+    params.set('page', String(query?.page ?? 1))
+    params.set('pageSize', String(query?.pageSize ?? 10))
+    return this.request<PlatformAttrPageResult>(`/product/attrs?${params.toString()}`, { method: 'GET' }, true)
+  }
+
+  async getPlatformAttrById(id: number): Promise<PlatformAttrWithValues> {
+    return this.request<PlatformAttrWithValues>(`/product/attrs/${id}`, { method: 'GET' }, true)
+  }
+
+  async createPlatformAttr(req: PlatformAttrCreateRequest): Promise<PlatformAttr> {
+    return this.request<PlatformAttr>('/product/attrs', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }, true)
+  }
+
+  async updatePlatformAttr(req: PlatformAttrUpdateRequest): Promise<PlatformAttr> {
+    return this.request<PlatformAttr>(`/product/attrs/${req.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(req),
+    }, true)
+  }
+
+  async deletePlatformAttrById(id: number): Promise<{ success: boolean }> {
+    return this.request<{ success: boolean }>(`/product/attrs/${id}`, { method: 'DELETE' }, true)
   }
 }
 

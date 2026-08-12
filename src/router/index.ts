@@ -4,6 +4,7 @@ import Home from '../views/Home.vue'
 import NotFound from '../views/NotFound.vue'
 import HomePage from '../views/pages/HomePage.vue'
 import BrandManage from '../views/pages/BrandManage.vue'
+import PlatformAttrManage from '../views/pages/PlatformAttrManage.vue'
 import Statistics from '../views/pages/Statistics.vue'
 import UserManage from '../views/pages/UserManage.vue'
 import RoleManage from '../views/pages/RoleManage.vue'
@@ -20,6 +21,7 @@ const routes = [
     children: [
       { path: '', component: HomePage },
       { path: 'brand-manage', component: BrandManage },
+      { path: 'platform-attr-manage', component: PlatformAttrManage },
       { path: 'statistics', component: Statistics },
       { path: 'user-manage', component: UserManage },
       { path: 'role-manage', component: RoleManage },
