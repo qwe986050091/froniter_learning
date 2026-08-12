@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -62,6 +62,7 @@ import { login as authLogin, logout as authLogout } from '@/services/authService
 import type { LoginRequest } from '@/types'
 
 const router = useRouter()
+const route = useRoute()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const form = reactive<LoginRequest>({
@@ -102,7 +103,8 @@ const handleLogin = async () => {
         {
           confirmButtonText: '进入系统',
           callback: () => {
-            router.push('/home')
+            const redirect = (route.query.redirect as string) || '/home'
+            router.push(redirect)
           }
         }
       )

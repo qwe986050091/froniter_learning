@@ -85,7 +85,8 @@ const handleLogout = async () => {
 
     await authLogout()
     ElMessage.success('已退出登录')
-    router.push('/login')
+    // 退出后带当前路径，登录后可跳回
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
   } catch {
     // user cancelled
   }
