@@ -5,47 +5,47 @@
     <div class="toolbar">
       <div class="category-cascader">
         <el-select
-          v-model="selectedLevel1Id"
-          placeholder="请选择一级分类"
-          style="width: 180px"
-          :disabled="loadingCategory"
-          @change="handleLevel1Change"
+            v-model="selectedLevel1Id"
+            placeholder="请选择一级分类"
+            style="width: 180px"
+            :disabled="loadingCategory"
+            @change="handleLevel1Change"
         >
           <el-option
-            v-for="c in level1Categories"
-            :key="c.id"
-            :label="c.name"
-            :value="c.id"
+              v-for="c in level1Categories"
+              :key="c.id"
+              :label="c.name"
+              :value="c.id"
           />
         </el-select>
 
         <el-select
-          v-model="selectedLevel2Id"
-          placeholder="请选择二级分类"
-          style="width: 180px; margin-left: 12px"
-          :disabled="!selectedLevel1Id || loadingCategory"
-          @change="handleLevel2Change"
+            v-model="selectedLevel2Id"
+            placeholder="请选择二级分类"
+            style="width: 180px; margin-left: 12px"
+            :disabled="!selectedLevel1Id || loadingCategory"
+            @change="handleLevel2Change"
         >
           <el-option
-            v-for="c in level2Categories"
-            :key="c.id"
-            :label="c.name"
-            :value="c.id"
+              v-for="c in level2Categories"
+              :key="c.id"
+              :label="c.name"
+              :value="c.id"
           />
         </el-select>
 
         <el-select
-          v-model="selectedLevel3Id"
-          placeholder="请选择三级分类"
-          style="width: 180px; margin-left: 12px"
-          :disabled="!selectedLevel2Id || loadingCategory"
-          @change="handleLevel3Change"
+            v-model="selectedLevel3Id"
+            placeholder="请选择三级分类"
+            style="width: 180px; margin-left: 12px"
+            :disabled="!selectedLevel2Id || loadingCategory"
+            @change="handleLevel3Change"
         >
           <el-option
-            v-for="c in level3Categories"
-            :key="c.id"
-            :label="c.name"
-            :value="c.id"
+              v-for="c in level3Categories"
+              :key="c.id"
+              :label="c.name"
+              :value="c.id"
           />
         </el-select>
       </div>
@@ -54,22 +54,22 @@
         <el-form :inline="true" :model="searchForm" class="search-form">
           <el-form-item label="属性名称">
             <el-input
-              v-model="searchForm.name"
-              placeholder="请输入属性名称"
-              clearable
-              style="width: 180px"
-              @keyup.enter="handleSearch"
+                v-model="searchForm.name"
+                placeholder="请输入属性名称"
+                clearable
+                style="width: 180px"
+                @keyup.enter="handleSearch"
             />
           </el-form-item>
           <el-form-item label="状态">
             <el-select
-              v-model="searchForm.status"
-              placeholder="全部"
-              clearable
-              style="width: 120px"
+                v-model="searchForm.status"
+                placeholder="全部"
+                clearable
+                style="width: 120px"
             >
-              <el-option label="启用" :value="1" />
-              <el-option label="禁用" :value="0" />
+              <el-option label="启用" :value="1"/>
+              <el-option label="禁用" :value="0"/>
             </el-select>
           </el-form-item>
           <el-form-item>
@@ -79,124 +79,133 @@
         </el-form>
 
         <el-button
-          type="primary"
-          :icon="Plus"
-          :disabled="!selectedLevel3Id || loading"
-          @click="handleAdd"
-        >+ 添加平台属性</el-button>
+            type="primary"
+            :icon="Plus"
+            :disabled="!selectedLevel3Id || loading"
+            @click="handleAdd"
+        >+ 添加平台属性
+        </el-button>
       </div>
     </div>
 
     <!-- 表格 -->
-    <el-table
-      v-loading="loading"
-      :data="tableData"
-      border
-      stripe
-      style="width: 100%"
-    >
-      <template #empty>
-        <el-empty :description="selectedLevel3Id ? '暂无数据' : '请先选择三级分类后查看平台属性'">
-          <template #image>
-            <el-image
-              src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=minimal%20empty%20state%20illustration%20with%20folder%20and%20magnifier&image_size=square"
-              :preview-src-list="[]"
-              fit="contain"
-              style="width: 160px; height: 160px"
-            />
+    <div class="table-card">
+      <el-table
+          v-loading="loading"
+          :data="tableData"
+          border
+          stripe
+          style="width: 100%"
+      >
+        <template #empty>
+          <el-empty :description="selectedLevel3Id ? '暂无数据' : '请先选择三级分类后查看平台属性'">
+            <template #image>
+              <el-image
+                  src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=minimal%20empty%20state%20illustration%20with%20folder%20and%20magnifier&image_size=square"
+                  :preview-src-list="[]"
+                  fit="contain"
+                  style="width: 160px; height: 160px"
+              />
+            </template>
+          </el-empty>
+        </template>
+
+        <el-table-column label="序号" width="80" align="center">
+          <template #default="{ $index }">
+            {{ (pagination.page - 1) * pagination.pageSize + $index + 1 }}
           </template>
-        </el-empty>
-      </template>
+        </el-table-column>
+        <el-table-column prop="name" label="属性名称" min-width="160"/>
+        <el-table-column label="属性值名称" min-width="560">
+          <template #default="{ row }">
+            <div class="value-tags">
+              <el-tag
+                  v-for="(v, idx) in row.values"
+                  :key="v.id ?? `${row.id}-${idx}-${v.value}`"
+                  :type="idx % 2 === 0 ? 'success' : 'warning'"
+                  effect="light"
+                  size="default"
+                  class="value-tag"
+              >{{ v.value }}
+              </el-tag>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="160" fixed="right" align="center">
+          <template #default="{ row }">
+            <el-button type="primary" link :icon="Edit" :disabled="loading"
+                       @click="handleEdit(row as PlatformAttrWithValues)">编辑
+            </el-button>
+            <el-button type="danger" link :icon="Delete" :disabled="loading"
+                       @click="handleDelete(row as PlatformAttrWithValues)">删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
 
-      <el-table-column label="序号" width="80" align="center">
-        <template #default="{ $index }">
-          {{ (pagination.page - 1) * pagination.pageSize + $index + 1 }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="name" label="属性名称" min-width="160" />
-      <el-table-column label="属性值名称" min-width="560">
-        <template #default="{ row }">
-          <div class="value-tags">
-            <el-tag
-              v-for="(v, idx) in row.values"
-              :key="v.id ?? `${row.id}-${idx}-${v.value}`"
-              :type="idx % 2 === 0 ? 'success' : 'warning'"
-              effect="light"
-              size="default"
-              class="value-tag"
-            >{{ v.value }}</el-tag>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="160" fixed="right" align="center">
-        <template #default="{ row }">
-          <el-button type="primary" link :icon="Edit" :disabled="loading" @click="handleEdit(row as PlatformAttrWithValues)">编辑</el-button>
-          <el-button type="danger" link :icon="Delete" :disabled="loading" @click="handleDelete(row as PlatformAttrWithValues)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页 -->
-    <div class="pagination">
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.pageSize"
-        :page-sizes="[10, 20, 50, 100]"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="pagination.total"
-        :disabled="loading"
-        @size-change="handleSearch"
-        @current-change="handlePageChange"
-      />
+      <!-- 分页 -->
+      <div class="pagination">
+        <el-pagination
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pagination.total"
+            :disabled="loading"
+            @size-change="handleSearch"
+            @current-change="handlePageChange"
+        />
+      </div>
     </div>
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="620px"
-      @closed="resetForm"
+        v-model="dialogVisible"
+        :title="dialogTitle"
+        width="620px"
+        @closed="resetForm"
     >
       <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="90px"
+          ref="formRef"
+          :model="form"
+          :rules="rules"
+          label-width="90px"
       >
         <el-form-item label="所属分类">
           <div class="category-readonly">{{ categoryPathLabel }}</div>
         </el-form-item>
         <el-form-item label="属性名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入属性名称" maxlength="50" show-word-limit />
+          <el-input v-model="form.name" placeholder="请输入属性名称" maxlength="50" show-word-limit/>
         </el-form-item>
         <el-form-item label="排序" prop="sort">
-          <el-input-number v-model="form.sort" :min="0" :max="9999" />
+          <el-input-number v-model="form.sort" :min="0" :max="9999"/>
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-switch v-model="form.status" :active-value="1" :inactive-value="0" />
+          <el-switch v-model="form.status" :active-value="1" :inactive-value="0"/>
         </el-form-item>
         <el-form-item label="属性值" prop="values">
           <div class="values-editor">
             <el-input
-              v-model="valueDraft"
-              placeholder="回车或点击「+ 添加」加入"
-              size="default"
-              style="width: 300px"
-              clearable
-              @keyup.enter="handleAddValue"
+                v-model="valueDraft"
+                placeholder="回车或点击「+ 添加」加入"
+                size="default"
+                style="width: 300px"
+                clearable
+                @keyup.enter="handleAddValue"
             />
             <el-button type="primary" :icon="Plus" style="margin-left: 8px" @click="handleAddValue">添加</el-button>
 
             <div class="values-tags">
               <el-tag
-                v-for="(v, idx) in form.values"
-                :key="idx"
-                :type="idx % 2 === 0 ? 'success' : 'warning'"
-                effect="light"
-                closable
-                class="value-tag"
-                @close="form.values.splice(idx, 1)"
-              >{{ v }}</el-tag>
+                  v-for="(v, idx) in form.values"
+                  :key="idx"
+                  :type="idx % 2 === 0 ? 'success' : 'warning'"
+                  effect="light"
+                  closable
+                  class="value-tag"
+                  @close="form.values.splice(idx, 1)"
+              >{{ v }}
+              </el-tag>
             </div>
             <div v-if="form.values.length === 0" class="form-tip">请至少添加一个属性值</div>
           </div>
@@ -211,8 +220,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import {ref, reactive, computed, onMounted, watch} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   Search,
   RefreshRight,
@@ -220,9 +229,9 @@ import {
   Edit,
   Delete,
 } from '@element-plus/icons-vue'
-import type { FormInstance, FormRules } from 'element-plus'
-import type { Category, PlatformAttrWithValues } from '@/types'
-import { frontierService } from '@/api'
+import type {FormInstance, FormRules} from 'element-plus'
+import type {Category, PlatformAttrWithValues} from '@/types'
+import {frontierService} from '@/api'
 
 // ---------- 三下拉级联 ----------
 const level1Categories = ref<Category[]>([])
@@ -236,7 +245,7 @@ const loadingCategory = ref(false)
 const loadCategories = async (level: 1 | 2 | 3, parentId: number | undefined): Promise<Category[]> => {
   loadingCategory.value = true
   try {
-    return await frontierService.listCategory({ level, parentId })
+    return await frontierService.listCategory({level, parentId})
   } finally {
     loadingCategory.value = false
   }
@@ -288,7 +297,7 @@ const handleReset = () => {
 }
 
 // ---------- 分页 / 表格 ----------
-const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
+const pagination = reactive({page: 1, pageSize: 10, total: 0})
 const tableData = ref<PlatformAttrWithValues[]>([])
 const loading = ref(false)
 const submitting = ref(false)
@@ -341,8 +350,8 @@ const valueDraft = ref('')
 
 const rules = reactive<FormRules>({
   name: [
-    { required: true, message: '请输入属性名称', trigger: 'blur' },
-    { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' },
+    {required: true, message: '请输入属性名称', trigger: 'blur'},
+    {min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur'},
   ],
   values: [
     {
@@ -416,7 +425,8 @@ const handleAddValue = () => {
   form.values.push(v)
   valueDraft.value = ''
   // 手动触发 values 的 rules 校验
-  formRef.value?.validateField('values').catch(() => {})
+  formRef.value?.validateField('values').catch(() => {
+  })
 }
 
 const handleSubmit = async () => {
@@ -465,9 +475,9 @@ const handleSubmit = async () => {
 const handleDelete = async (row: PlatformAttrWithValues) => {
   try {
     await ElMessageBox.confirm(
-      `确认删除平台属性「${row.name}」吗？该操作会同步删除其下所有属性值。`,
-      '提示',
-      { type: 'warning', confirmButtonText: '确定', cancelButtonText: '取消' }
+        `确认删除平台属性「${row.name}」吗？该操作会同步删除其下所有属性值。`,
+        '提示',
+        {type: 'warning', confirmButtonText: '确定', cancelButtonText: '取消'}
     )
   } catch {
     return
@@ -493,7 +503,8 @@ const resetForm = () => {
 // 当搜索条件变化（比如 name）且未走搜索按钮时，也允许 values 校验立即生效（rules trigger change）
 watch(() => form.values.length, () => {
   if (dialogVisible.value) {
-    formRef.value?.validateField('values').catch(() => {})
+    formRef.value?.validateField('values').catch(() => {
+    })
   }
 })
 
@@ -513,7 +524,11 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 16px;
   margin-bottom: 12px;
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
 }
 
 .category-cascader {
@@ -569,6 +584,13 @@ onMounted(async () => {
   padding: 0 10px;
   border-radius: 4px;
   display: inline-block;
+}
+
+.table-card {
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
 }
 
 .pagination {
