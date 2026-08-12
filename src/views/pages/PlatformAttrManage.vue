@@ -2,161 +2,39 @@
   <div class="platform-attr-page">
 
     <!-- 顶部：三下拉级联分类 + 搜索 + 新增按钮 -->
-    <div class="toolbar">
-      <div class="category-cascader">
-        <el-select
-            v-model="selectedLevel1Id"
-            placeholder="请选择一级分类"
-            style="width: 180px"
-            :disabled="loadingCategory"
-            @change="handleLevel1Change"
-        >
-          <el-option
-              v-for="c in level1Categories"
-              :key="c.id"
-              :label="c.name"
-              :value="c.id"
-          />
-        </el-select>
+    <AttrToolbar
+        v-model:selected-level-1-id="selectedLevel1Id"
+        v-model:selected-level-2-id="selectedLevel2Id"
+        v-model:selected-level-3-id="selectedLevel3Id"
+        v-model:search-name="searchForm.name"
+        v-model:search-status="searchForm.status"
+        :level1-categories="level1Categories"
+        :level2-categories="level2Categories"
+        :level3-categories="level3Categories"
+        :loading-category="loadingCategory"
+        :loading="loading"
+        :can-add="!!selectedLevel3Id"
+        @level1-change="handleLevel1Change"
+        @level2-change="handleLevel2Change"
+        @level3-change="handleLevel3Change"
+        @search="handleSearch"
+        @reset="handleReset"
+        @add="handleAdd"
+    />
 
-        <el-select
-            v-model="selectedLevel2Id"
-            placeholder="请选择二级分类"
-            style="width: 180px; margin-left: 12px"
-            :disabled="!selectedLevel1Id || loadingCategory"
-            @change="handleLevel2Change"
-        >
-          <el-option
-              v-for="c in level2Categories"
-              :key="c.id"
-              :label="c.name"
-              :value="c.id"
-          />
-        </el-select>
-
-        <el-select
-            v-model="selectedLevel3Id"
-            placeholder="请选择三级分类"
-            style="width: 180px; margin-left: 12px"
-            :disabled="!selectedLevel2Id || loadingCategory"
-            @change="handleLevel3Change"
-        >
-          <el-option
-              v-for="c in level3Categories"
-              :key="c.id"
-              :label="c.name"
-              :value="c.id"
-          />
-        </el-select>
-      </div>
-
-      <div class="toolbar-right">
-        <el-form :inline="true" :model="searchForm" class="search-form">
-          <el-form-item label="属性名称">
-            <el-input
-                v-model="searchForm.name"
-                placeholder="请输入属性名称"
-                clearable
-                style="width: 180px"
-                @keyup.enter="handleSearch"
-            />
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-select
-                v-model="searchForm.status"
-                placeholder="全部"
-                clearable
-                style="width: 120px"
-            >
-              <el-option label="启用" :value="1"/>
-              <el-option label="禁用" :value="0"/>
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" :icon="Search" :loading="loading" @click="handleSearch">搜索</el-button>
-            <el-button :icon="RefreshRight" :disabled="loading" @click="handleReset">重置</el-button>
-          </el-form-item>
-        </el-form>
-
-        <el-button
-            type="primary"
-            :icon="Plus"
-            :disabled="!selectedLevel3Id || loading"
-            @click="handleAdd"
-        >+ 添加平台属性
-        </el-button>
-      </div>
-    </div>
-
-    <!-- 表格 -->
-    <div class="table-card">
-      <el-table
-          v-loading="loading"
-          :data="tableData"
-          border
-          stripe
-          style="width: 100%"
-      >
-        <template #empty>
-          <el-empty :description="selectedLevel3Id ? '暂无数据' : '请先选择三级分类后查看平台属性'">
-            <template #image>
-              <el-image
-                  src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=minimal%20empty%20state%20illustration%20with%20folder%20and%20magnifier&image_size=square"
-                  :preview-src-list="[]"
-                  fit="contain"
-                  style="width: 160px; height: 160px"
-              />
-            </template>
-          </el-empty>
-        </template>
-
-        <el-table-column label="序号" width="80" align="center">
-          <template #default="{ $index }">
-            {{ (pagination.page - 1) * pagination.pageSize + $index + 1 }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="name" label="属性名称" min-width="160"/>
-        <el-table-column label="属性值名称" min-width="560">
-          <template #default="{ row }">
-            <div class="value-tags">
-              <el-tag
-                  v-for="(v, idx) in row.values"
-                  :key="v.id ?? `${row.id}-${idx}-${v.value}`"
-                  :type="idx % 2 === 0 ? 'success' : 'warning'"
-                  effect="light"
-                  size="default"
-                  class="value-tag"
-              >{{ v.value }}
-              </el-tag>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="160" fixed="right" align="center">
-          <template #default="{ row }">
-            <el-button type="primary" link :icon="Edit" :disabled="loading"
-                       @click="handleEdit(row as PlatformAttrWithValues)">编辑
-            </el-button>
-            <el-button type="danger" link :icon="Delete" :disabled="loading"
-                       @click="handleDelete(row as PlatformAttrWithValues)">删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 分页 -->
-      <div class="pagination">
-        <el-pagination
-            v-model:current-page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="pagination.total"
-            :disabled="loading"
-            @size-change="handleSearch"
-            @current-change="handlePageChange"
-        />
-      </div>
-    </div>
+    <!-- 表格 + 分页 -->
+    <AttrTable
+        v-model:page="pagination.page"
+        v-model:page-size="pagination.pageSize"
+        :table-data="tableData"
+        :loading="loading"
+        :selected-level-3-id="selectedLevel3Id"
+        :total="pagination.total"
+        @edit="handleEdit"
+        @delete="handleDelete"
+        @size-change="handleSearch"
+        @current-change="handlePageChange"
+    />
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog
@@ -222,16 +100,12 @@
 <script setup lang="ts">
 import {ref, reactive, computed, onMounted, watch} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import {
-  Search,
-  RefreshRight,
-  Plus,
-  Edit,
-  Delete,
-} from '@element-plus/icons-vue'
+import {Plus} from '@element-plus/icons-vue'
 import type {FormInstance, FormRules} from 'element-plus'
 import type {Category, PlatformAttrWithValues} from '@/types'
 import {frontierService} from '@/api'
+import AttrToolbar from './components/AttrToolbar.vue'
+import AttrTable from './components/AttrTable.vue'
 
 // ---------- 三下拉级联 ----------
 const level1Categories = ref<Category[]>([])
@@ -520,45 +394,15 @@ onMounted(async () => {
   padding: 16px;
 }
 
-.toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
-}
-
-.category-cascader {
-  display: flex;
-  align-items: center;
-}
-
-.toolbar-right {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.search-form {
-  margin-bottom: 0;
-}
-
-.value-tags,
 .values-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 12px;
 }
 
 .value-tag {
   margin-right: 0 !important;
-}
-
-.values-tags {
-  margin-top: 12px;
 }
 
 .values-editor {
@@ -584,18 +428,5 @@ onMounted(async () => {
   padding: 0 10px;
   border-radius: 4px;
   display: inline-block;
-}
-
-.table-card {
-  padding: 16px;
-  background: #fff;
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
-}
-
-.pagination {
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-end;
 }
 </style>
