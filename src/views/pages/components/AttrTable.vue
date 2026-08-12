@@ -81,8 +81,9 @@ defineProps<{
 }>()
 
 // 分页：父组件通过 v-model:page / v-model:page-size 双向绑定
-const page = defineModel<number>('page')
-const pageSize = defineModel<number>('pageSize')
+// required: true 让类型从 number|undefined 收窄为 number，避免模板里算术报错
+const page = defineModel<number>('page', {required: true})
+const pageSize = defineModel<number>('pageSize', {required: true})
 
 const emit = defineEmits<{
   edit: [row: PlatformAttrWithValues]

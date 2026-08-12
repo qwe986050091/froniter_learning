@@ -264,27 +264,21 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
-const handleEdit = async (row: PlatformAttrWithValues) => {
+const handleEdit = (row: PlatformAttrWithValues) => {
   isEditing.value = true
   editingId.value = row.id
   resetForm()
-  // 先取详情（虽然 row 已经带 values，但为了接口一致性走一次）
-  try {
-    const detail = await frontierService.getPlatformAttrById(Number(row.id))
-    form.name = detail.name
-    form.sort = detail.sort ?? 0
-    form.status = detail.status ?? 1
-    form.values = detail.values.map(v => v.value)
-    // 如果当前三级分类不是详情的分类，尽量把分类下拉定位到对应项，用户直观
-    if (detail.categoryId !== selectedLevel3Id.value) {
-      const matchedL3 = level3Categories.value.find(c => c.id === detail.categoryId)
-      if (matchedL3) {
-        selectedLevel3Id.value = detail.categoryId
-      }
+  // row 本身已带 values 和 categoryId，直接填充表单，省去一次后端请求
+  form.name = row.name
+  form.sort = row.sort ?? 0
+  form.status = row.status ?? 1
+  form.values = row.values.map(v => v.value)
+  // 如果当前三级分类不是该属性所属分类，尽量把分类下拉定位到对应项，用户直观
+  if (row.categoryId !== selectedLevel3Id.value) {
+    const matchedL3 = level3Categories.value.find(c => c.id === row.categoryId)
+    if (matchedL3) {
+      selectedLevel3Id.value = row.categoryId
     }
-  } catch (e: any) {
-    ElMessage.error(e?.message || '加载属性详情失败')
-    return
   }
   dialogVisible.value = true
 }
