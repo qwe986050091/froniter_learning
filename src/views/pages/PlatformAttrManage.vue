@@ -229,8 +229,8 @@ const rules = reactive<FormRules>({
   ],
   values: [
     {
-      validator: (_rule, cb) => {
-        // 此处 value 会拿 form.values 也能，直接用 reactive form 判断
+      validator: (_rule, _value, cb) => {
+        // 直接用 reactive form 判断
         if (!form.values || form.values.length === 0) {
           cb(new Error('请至少添加一个属性值'))
         } else {
